@@ -1,12 +1,10 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Alert, Animated, Linking, StyleSheet} from 'react-native';
+import {Alert, Animated, Linking, SafeAreaView, StyleSheet} from 'react-native';
 
 import {
-  useIsDrawerOpen,
+  useDrawerStatus,
   createDrawerNavigator,
   DrawerContentComponentProps,
-  DrawerContentOptions,
-  DrawerContentScrollView,
 } from '@react-navigation/drawer';
 
 import Screens from './Screens';
@@ -18,7 +16,7 @@ const Drawer = createDrawerNavigator();
 /* drawer menu screens navigation */
 const ScreensStack = () => {
   const {colors} = useTheme();
-  const isDrawerOpen = useIsDrawerOpen();
+  const isDrawerOpen = useDrawerStatus() === 'open';
   const animation = useRef(new Animated.Value(0)).current;
 
   const scale = animation.interpolate({
@@ -63,7 +61,7 @@ const ScreensStack = () => {
 
 /* custom drawer menu */
 const DrawerContent = (
-  props: DrawerContentComponentProps<DrawerContentOptions>,
+  props: DrawerContentComponentProps,
 ) => {
   const {navigation} = props;
   const {t} = useTranslation();
@@ -73,14 +71,14 @@ const DrawerContent = (
   const labelColor = colors.text;
 
   const handleNavigation = useCallback(
-    (to) => {
+    (to: string) => {
       setActive(to);
       navigation.navigate(to);
     },
     [navigation, setActive],
   );
 
-  const handleWebLink = useCallback((url) => Linking.openURL(url), []);
+  const handleWebLink = useCallback((url: string) => Linking.openURL(url), []);
 
   // screen list for Drawer menu
   const screens = [
@@ -95,13 +93,15 @@ const DrawerContent = (
   ];
 
   return (
-    <DrawerContentScrollView
-      {...props}
-      scrollEnabled
-      removeClippedSubviews
-      renderToHardwareTextureAndroid
-      contentContainerStyle={{paddingBottom: sizes.padding}}>
-      <Block paddingHorizontal={sizes.padding}>
+    <SafeAreaView style={{flex: 1}}>
+      <Block paddingHorizontal={sizes.padding} style={{
+        flex: 1,
+        width: '60%',
+        borderRightWidth: 0,
+        backgroundColor: 'transparent',
+        paddingBottom: sizes.padding,
+        marginTop: sizes.padding
+      }}>
         <Block flex={0} row align="center" marginBottom={sizes.l}>
           <Image
             radius={0}
@@ -207,7 +207,7 @@ const DrawerContent = (
           />
         </Block>
       </Block>
-    </DrawerContentScrollView>
+      </SafeAreaView>
   );
 };
 
@@ -218,16 +218,8 @@ export default () => {
   return (
     <Block gradient={gradients.light}>
       <Drawer.Navigator
-        drawerType="slide"
-        overlayColor="transparent"
-        sceneContainerStyle={{backgroundColor: 'transparent'}}
         drawerContent={(props) => <DrawerContent {...props} />}
-        drawerStyle={{
-          flex: 1,
-          width: '60%',
-          borderRightWidth: 0,
-          backgroundColor: 'transparent',
-        }}>
+      >
         <Drawer.Screen name="Screens" component={ScreensStack} />
       </Drawer.Navigator>
     </Block>
